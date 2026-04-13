@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Build Master VR</title>
+    <link rel="stylesheet" href="styles/style.css">
+    
+    <!-- A-Frame Library -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.3.3/dist/aframe-environment-component.min.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="scripts/components/head-tilt-controller.js"></script>
+    <script src="scripts/components/falling-item.js"></script>
+    <script src="scripts/components/collision-detector.js"></script>
+    <script src="scripts/components/sequence-manager.js"></script>
+    <script src="scripts/game-manager.js" defer></script>
+</head>
+<body>
+
+    <!-- STAGE 1: Flash Screen -->
+    <div id="flash-screen" class="screen active" style="z-index: 10000;">
+        <div class="aurora-bg">
+            <div class="aurora-blob aurora-1"></div>
+            <div class="aurora-blob aurora-2"></div>
+            <div class="aurora-blob aurora-3"></div>
+        </div>
+        
+        <div class="scroll-inner">
+            <div class="hero-glass-card">
+                <div class="version-badge">Version 1.0.0</div>
+                <h1 class="game-title">BUILD MASTER <span>VR</span></h1>
+                <p class="tagline">Learn. Build. Master.</p>
+                
+                <div class="credits-box">
+                    <div class="creator">Created by Saketh</div>
+                    <div class="course">CMPT 461</div>
+                    <div class="semester">Spring 2026</div>
+                </div>
+                
+                <div class="btn-wrapper" style="position: relative;">
+                    <div class="pulse-ring"></div>
+                    <button id="start-button" class="btn-primary" style="position: relative; z-index: 2;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        Start Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 2: Setup Menu -->
+    <div id="setup-menu" class="screen">
+        <div class="scroll-inner">
+            <h2 class="screen-title">Setup</h2>
+            
+            <div class="settings-panel">
+                <div class="setting-row">
+                    <span class="setting-label">Difficulty:</span>
+                    <select id="difficulty-select" class="styled-select">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                
+                <div class="setting-divider"></div>
+                
+                <div class="setting-row">
+                    <span class="setting-label">Control Sensitivity:</span>
+                    <div class="slider-wrapper">
+                        <input type="range" id="sensitivity-slider" class="styled-slider" min="1" max="5" step="1" value="3">
+                        <span id="sensitivity-value" class="slider-value">3</span>
+                    </div>
+                </div>
+                
+                <div class="setting-divider"></div>
+                
+                <div class="setting-row">
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="music-toggle" class="toggle-checkbox" checked>
+                        <div class="toggle-label"></div>
+                        <span class="toggle-text">Background Music</span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <label class="toggle-wrapper">
+                        <input type="checkbox" id="sfx-toggle" class="toggle-checkbox" checked>
+                        <div class="toggle-label"></div>
+                        <span class="toggle-text">Sound Effects</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="play-button" class="btn-primary">Start Level 1</button>
+                <button id="tutorial-button" class="btn-secondary">Show Tutorial</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 3A: Tutorial Screen -->
+    <div id="tutorial-screen" class="screen">
+        <div class="scroll-inner">
+            <h2 class="screen-title">How to Play</h2>
+            
+            <div class="tutorial-panel">
+                <div class="tutorial-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Control the Platform</h3>
+                        <p>Tilt head left/right to move the platform.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Catch Ingredients</h3>
+                        <p>Position platform to catch falling matching ingredients.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Follow the Order</h3>
+                        <p>Check Reference Guide for the required recipe sequence.</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Build Combos</h3>
+                        <p>Catch items correctly to build your score multiplier.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="start-from-tutorial" class="btn-primary">Got It! Let's Play</button>
+                <button id="back-to-setup" class="btn-secondary">Back to Setup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 5: Complete Screen -->
+    <div id="complete-screen" class="screen">
+        <div class="scroll-inner">
+            <div class="complete-emoji">🎉</div>
+            <h2 class="screen-title">Level Complete!</h2>
+            
+            <div class="score-label">Final Score</div>
+            <div id="final-score-display" class="final-score">0</div>
+            
+            <div class="target-label" style="font-size: 1.2rem; color: #888; margin-top: -10px; margin-bottom: 20px;">
+                Target Score Needed: <span id="target-score-display" style="font-weight: bold; color: #FFA500;">0</span>
+            </div>
+            
+            <div class="star-rating" id="star-rating-container">
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-row">
+                    <span class="stat-key">Max Combo:</span>
+                    <span id="stat-combo" class="stat-val">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-key">Accuracy:</span>
+                    <span id="stat-accuracy" class="stat-val">100%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-key">Time:</span>
+                    <span id="stat-time" class="stat-val">0:00</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="next-level-button" class="btn-primary" style="display: none; background: #4CAF50;">Next Level</button>
+                <button id="replay-button" class="btn-primary">Play Again</button>
+                <button id="menu-button" class="btn-secondary">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE 4: HUD overlays for VR -->
+    <div id="hud-overlay">
+        <div id="hud-top">
+            <div class="hud-badge">Score: <span id="hud-score">0</span></div>
+            <div class="hud-badge combo">Combo: <span id="hud-combo">x1</span></div>
+            <div class="hud-badge">Time: <span id="hud-time">90</span></div>
+            <div class="hud-badge">Next: <span id="hud-next">...</span></div>
+        </div>
+        
+        <div id="reference-guide">
+            <div id="ref-title">Recipe</div>
+            <div id="ref-list"></div>
+        </div>
+        
+        <div id="feedback-flash"></div>
+    </div>
+
+    <!-- STAGE 4: VR Scene (Hidden Initially) -->
+    <a-scene id="game-scene" style="display: none; z-index: 1;" vr-mode-ui="enabled: true" shadow="type: pcfsoft">
+        
+        <!-- Environment (Beautiful Forest base to match grass/ground) -->
+        <a-entity environment="preset: forest; groundColor: #4A5D23; playArea: 1.2; shadow: true; skyType: atmosphere; lighting: none;"></a-entity>
+        
+        <!-- Custom Lights for Better Shadows -->
+        <a-light type="ambient" color="#A0BEEB" intensity="0.5"></a-light>
+        <a-light type="directional" color="#FFFFFF" intensity="0.8" position="-2 5 3" cast-shadow="true" shadow-mapSize="2048"></a-light>
+        
+        <!-- Camera and Player Rig -->
+        <a-entity id="camera-rig" position="0 1.6 0">
+            <a-camera id="player-camera" look-controls="pointerLockEnabled: false" head-tilt-controller></a-camera>
+        </a-entity>
+        
+        <!-- SLEEK MODERN TWU BURGER JOINT (Detailed Architectural Backdrop) -->
+        <a-entity position="0 0 -20">
+            <!-- Ground Foundation (Concrete Pad) -->
+            <a-box position="0 0.1 0" width="40" height="0.2" depth="15" color="#4a4a4a" material="roughness: 0.9" shadow="receive: true"></a-box>
+            
+            <!-- Main Building Body (Dark Wood/Slate theme) -->
+            <a-box position="-2 4 -2" width="25" height="8" depth="8" color="#3B2F2F" material="roughness: 0.8" shadow="receive: true; cast: true"></a-box>
+            
+            <!-- Huge Modern Glass Front -->
+            <a-box position="-6 3.5 2.1" width="15" height="6" depth="0.2" color="#87CEEB" material="metalness: 0.9; roughness: 0.05; opacity: 0.4; transparent: true"></a-box>
+            <!-- Metal Window Frames (Using wireframe trick) -->
+            <a-box position="-6 3.5 2.2" width="15.1" height="6.1" depth="0.05" color="#222222" material="roughness: 0.5" wireframe="true"></a-box>
+            
+            <!-- Bold Architectural Red Tower Feature (Anchor point for branding) -->
+            <a-box position="12 7 0" width="6" height="14" depth="7" color="#C0392B" material="roughness: 0.6" shadow="receive: true; cast: true"></a-box>
+            <!-- White decorative stripes extending horizontally -->
+            <a-box position="12 4 3.6" width="6.2" height="0.5" depth="0.1" color="#EEEEEE"></a-box>
+            <a-box position="12 6 3.6" width="6.2" height="0.5" depth="0.1" color="#EEEEEE"></a-box>
+            
+            <!-- Giant Overhanging Roof Canopy -->
+            <a-box position="0 8.25 1" width="35" height="0.5" depth="14" color="#1A1A1A" material="roughness: 0.9" shadow="cast: true; receive: true"></a-box>
+            
+            <!-- Glowing Neon Orange Rim wrapping the front roof edge -->
+            <a-box position="0 8.3 8.01" width="35" height="0.1" depth="0.1" color="#F39C12" material="emissive: #F39C12; emissiveIntensity: 0.8"></a-box>
+
+            <!-- Store Sign mounted on the Red Tower -->
+            <a-entity position="12 11.5 3.52">
+                <a-text value="TWU" position="0 1.2 0" align="center" width="25" color="#FFFFFF" font="exo2bold"></a-text>
+                <a-text value="BURGER JOINT" position="0 -0.5 0" align="center" width="12" color="#FFD700" font="exo2bold"></a-text>
+            </a-entity>
+            
+            <!-- Entrance Door -->
+            <a-plane position="4 2 2.01" width="2.5" height="4" color="#111" material="metalness: 0.8; roughness: 0.2"></a-plane>
+            <!-- Door Handle -->
+            <a-box position="3.5 2 2.05" width="0.1" height="0.8" depth="0.1" color="#DDDDDD"></a-box>
+        </a-entity>
+
+        <!-- Platform Area (Foreground Center) -->
+        <a-entity position="0 0.5 -4">
+            <!-- Visual Bounds (Neon rails framing the play track) -->
+            <a-cylinder color="#A855F7" radius="0.05" height="6" position="-4.5 0 0" rotation="90 0 0" opacity="0.8" material="emissive: #A855F7; emissiveIntensity: 0.5;"></a-cylinder>
+            <a-cylinder color="#A855F7" radius="0.05" height="6" position="4.5 0 0" rotation="90 0 0" opacity="0.8" material="emissive: #A855F7; emissiveIntensity: 0.5;"></a-cylinder>
+            
+            <!-- The controllable red platform -->
+            <a-box id="platform" color="#EF2D5E" width="1.5" height="0.2" depth="1.5" position="0 0 0" material="roughness: 0.2; metalness: 0.1;" shadow="cast: true; receive: true" collision-detector></a-box>
+        </a-entity>
+        
+        <!-- Side Table for Stacking Burger (Foreground Right) -->
+        <a-entity position="3.5 0 -4">
+            <!-- Table Legs -->
+            <a-cylinder radius="0.05" height="1" position="-0.4 0.5 -0.4" color="#111111" shadow="cast: true"></a-cylinder>
+            <a-cylinder radius="0.05" height="1" position="0.4 0.5 -0.4" color="#111111" shadow="cast: true"></a-cylinder>
+            <a-cylinder radius="0.05" height="1" position="-0.4 0.5 0.4" color="#111111" shadow="cast: true"></a-cylinder>
+            <a-cylinder radius="0.05" height="1" position="0.4 0.5 0.4" color="#111111" shadow="cast: true"></a-cylinder>
+            <!-- Table Top -->
+            <a-box width="1.4" depth="1.4" height="0.1" position="0 1 0" color="#D3D3D3" material="metalness: 0.1; roughness: 0.8" shadow="cast: true; receive: true"></a-box>
+            <!-- The glossy white plate -->
+            <a-cylinder radius="0.55" height="0.05" position="0 1.05 0" color="#FFFFFF" material="roughness: 0.1; metalness: 0.2;" shadow="cast: true; receive: true"></a-cylinder>
+            
+            <!-- Stack Container -->
+            <a-entity id="stack-container" position="0 1.07 0"></a-entity>
+        </a-entity>
+        
+        <!-- Items Container -->
+        <a-entity id="items-container" position="0 0 -4"></a-entity>
+        
+        <!-- Sequence Manager -->
+        <a-entity sequence-manager></a-entity>
+
+    </a-scene>
+
+</body>
+</html>
