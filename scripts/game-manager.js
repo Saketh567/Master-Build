@@ -348,25 +348,31 @@ class GameManager {
         if (this.state.difficulty === 'medium') numItems = 3;
         if (this.state.difficulty === 'hard') numItems = 4;
         
-        // Generate distinct safe X positions so they don't overlap
+        // Generate distinct safe X and Z positions so they don't overlap spatially (2D Grid)
         let spawnPositions = [];
         while(spawnPositions.length < numItems) {
             let candidateX = (Math.random() * 8) - 4; // -4 to 4 on X axis
+            let candidateZ = (Math.random() * 3) - 1.5; // -1.5 to 1.5 on Z axis (Depth)
+            
             let isTooClose = false;
-            for (let px of spawnPositions) {
-                if (Math.abs(candidateX - px) < 1.5) { // Ensure at least 1.5 unit gap
+            for (let pos of spawnPositions) {
+                // Ensure at least 1.5 unit spatial 2D gap
+                let dx = candidateX - pos.x;
+                let dz = candidateZ - pos.z;
+                if (Math.sqrt(dx*dx + dz*dz) < 1.5) { 
                     isTooClose = true;
                     break;
                 }
             }
-            if (!isTooClose) spawnPositions.push(candidateX);
+            if (!isTooClose) spawnPositions.push({x: candidateX, z: candidateZ});
         }
         
         // Decide which of the falling items will be the correct one
         let correctIndex = Math.floor(Math.random() * numItems);
         
         for (let i = 0; i < numItems; i++) {
-            let posX = spawnPositions[i];
+            let posX = spawnPositions[i].x;
+            let posZ = spawnPositions[i].z;
             let itemToSpawn;
             
             // Assign the correct item to the designated index
@@ -385,10 +391,7 @@ class GameManager {
             }
             
             // STAGGER VERTICAL FALLING 
-            // Instead of falling perfectly parallel, randomize their spawn height significantly
-            // This grants delays between multiple objects reaching the platform so it's not impossible
             const posY = 5 + (Math.random() * 4); // Spawns from Y=5 up to Y=9
-            const posZ = 0; // Relative to items container
             
             const el = document.createElement(`a-${itemToSpawn.shape || 'sphere'}`);
             el.setAttribute('color', itemToSpawn.color);
