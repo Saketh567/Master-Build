@@ -49,7 +49,8 @@ AFRAME.registerComponent('head-tilt-controller', {
         currentPos.z += (targetZ - currentPos.z) * 0.2;
         
         // --- Desktop Mouse Fallback for Testing ---
-        if (this.mouseX !== undefined && this.mouseY !== undefined && !this.el.sceneEl.is('vr-mode')) {
+        // Exclude mobile devices because screen tapping sets artificial mouseX/Y, locking the platform!
+        if (this.mouseX !== undefined && this.mouseY !== undefined && !AFRAME.utils.device.isMobile() && !this.el.sceneEl.is('vr-mode')) {
             let deskX = (this.mouseX / window.innerWidth) * 2 - 1; // -1 to 1
             let deskZ = (this.mouseY / window.innerHeight) * 2 - 1;
             
