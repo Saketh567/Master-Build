@@ -352,7 +352,7 @@ class GameManager {
         let spawnPositions = [];
         while(spawnPositions.length < numItems) {
             let candidateX = (Math.random() * 8) - 4; // -4 to 4 on X axis
-            let candidateZ = (Math.random() * 3) - 1.5; // -1.5 to 1.5 on Z axis (Depth)
+            let candidateZ = (Math.random() * 5) - 2.5; // -2.5 to 2.5 on Z axis (Extreme Depth)
             
             let isTooClose = false;
             for (let pos of spawnPositions) {

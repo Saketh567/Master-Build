@@ -33,14 +33,17 @@ AFRAME.registerComponent('head-tilt-controller', {
         
         // Instead of pure velocity, we will use Responsive Positional Mapping based on where they are looking.
         // If they look left (positive yaw), platform goes left (negative X).
-        const reachMultiplier = (this.data.sensitivity * 1.5) + 2.0; 
+        const reachMultiplier = (this.data.sensitivity * 2.0) + 2.0; 
         
         let targetX = -yaw * reachMultiplier;
-        let targetZ = -pitch * reachMultiplier;
+        
+        // Fix: Make Z movement act like a natural tray/joystick. 
+        // Tilting phone down/forward (negative pitch) = move platform away (-Z)
+        let targetZ = pitch * reachMultiplier;
         
         // Clamp to physical game boundaries
         targetX = Math.max(-this.data.boundaryX, Math.min(this.data.boundaryX, targetX));
-        targetZ = Math.max(-this.data.boundaryZ, Math.min(this.data.boundaryZ, targetZ));
+        targetZ = Math.max(-2.5, Math.min(2.5, targetZ)); // Hardcoded larger Z boundary for dramatic cross movement
         
         let currentPos = this.platform.object3D.position;
         
