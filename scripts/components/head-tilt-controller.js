@@ -23,45 +23,41 @@ AFRAME.registerComponent('head-tilt-controller', {
         // Ensure we have platform object3D
         if (!this.platform.object3D) return;
 
-        // Get rotation from camera
+        // Get rotation from camera (Euler angles in radians)
         const rotation = this.el.object3D.rotation;
         
-        // Z rotation (Roll) maps to X movement (left/right head tilt)
-        // X rotation (Pitch) maps to Z movement (forward/back head tilt)
-        const roll = rotation.z;
+        // Z rotation (Roll) was originally used for Desktop VR headsets.
+        // For Mobile / Magic Window, users naturally PAN the camera (Yaw = rotation.y).
+        const yaw = rotation.y; 
         const pitch = rotation.x;
         
-        // Multiplier based on sensitivity (1 to 5)
-        const speedMult = (this.data.sensitivity * 0.1) + 0.1;
+        // Instead of pure velocity, we will use Responsive Positional Mapping based on where they are looking.
+        // If they look left (positive yaw), platform goes left (negative X).
+        const reachMultiplier = (this.data.sensitivity * 1.5) + 2.0; 
         
-        // Calculate new position offsets
-        let moveX = -roll * speedMult;
-        let moveZ = -pitch * speedMult;
+        let targetX = -yaw * reachMultiplier;
+        let targetZ = -pitch * reachMultiplier;
         
-        // Apply to current position
-        let currentPos = this.platform.object3D.position;
-        let targetX = currentPos.x + moveX;
-        let targetZ = currentPos.z + moveZ;
-        
-        // Clamp to boundaries
+        // Clamp to physical game boundaries
         targetX = Math.max(-this.data.boundaryX, Math.min(this.data.boundaryX, targetX));
         targetZ = Math.max(-this.data.boundaryZ, Math.min(this.data.boundaryZ, targetZ));
         
-        // Smooth positioning
-        currentPos.x += (targetX - currentPos.x) * 0.5;
-        currentPos.z += (targetZ - currentPos.z) * 0.5;
+        let currentPos = this.platform.object3D.position;
         
-        // --- Desktop Fallback for Testing ---
+        // Smooth positioning (Lerp)
+        currentPos.x += (targetX - currentPos.x) * 0.2;
+        currentPos.z += (targetZ - currentPos.z) * 0.2;
+        
+        // --- Desktop Mouse Fallback for Testing ---
         if (this.mouseX !== undefined && this.mouseY !== undefined && !this.el.sceneEl.is('vr-mode')) {
-            // Map mouse to boundaries
             let deskX = (this.mouseX / window.innerWidth) * 2 - 1; // -1 to 1
             let deskZ = (this.mouseY / window.innerHeight) * 2 - 1;
             
-            targetX = deskX * this.data.boundaryX;
-            targetZ = deskZ * this.data.boundaryZ;
+            let deskTargetX = deskX * this.data.boundaryX;
+            let deskTargetZ = deskZ * this.data.boundaryZ;
             
-            currentPos.x += (targetX - currentPos.x) * 0.5;
-            currentPos.z += (targetZ - currentPos.z) * 0.5;
+            currentPos.x += (deskTargetX - currentPos.x) * 0.5;
+            currentPos.z += (deskTargetZ - currentPos.z) * 0.5;
         }
     },
     
